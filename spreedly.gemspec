@@ -26,5 +26,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency 'log_buddy'
   s.add_development_dependency 'awesome_print'
   s.add_development_dependency 'test-unit'
+  s.add_development_dependency 'openssl'
 end
 
