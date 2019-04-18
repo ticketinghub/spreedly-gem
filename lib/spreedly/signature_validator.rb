@@ -14,6 +14,8 @@ module Spreedly
       signature == signature_for(@secret)
     end
 
+    private
+
     def signature_for(secret)
       algorithm = @document.xpath("//transaction/signed/algorithm").text
 
