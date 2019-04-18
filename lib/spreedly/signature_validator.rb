@@ -10,13 +10,12 @@ module Spreedly
     end
 
     def valid?
-      signature = @document.xpath("//transaction/signed/signature").text
-      signature == signature_for(@secret)
+      @document.xpath("//transaction/signed/signature").text == signature_for_secret
     end
 
     private
 
-    def signature_for(secret)
+    def signature_for_secret
       algorithm = @document.xpath("//transaction/signed/algorithm").text
 
       fields = @document.xpath("//transaction/signed/fields").text.split(" ")
@@ -28,7 +27,7 @@ module Spreedly
       signature_data = values.join("|")
       OpenSSL::HMAC.hexdigest(
         OpenSSL::Digest.new(algorithm),
-        secret,
+        @secret,
         signature_data
       )
     end
