@@ -196,7 +196,7 @@ class PurchaseTest < Test::Unit::TestCase
       [ './retain_on_success', 'true' ],
       [ './continue_caching', 'true']
 
-    assert body.to_s.include?(google_pay_token)
+    assert body.to_s.include?(apple_pay_token)
   end
 
   private
