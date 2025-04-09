@@ -9,6 +9,8 @@ require 'spreedly/auth_mode'
 require 'spreedly/credential'
 require 'spreedly/payment_methods/payment_method'
 require 'spreedly/payment_methods/credit_card'
+require 'spreedly/payment_methods/google_pay'
+require 'spreedly/payment_methods/apple_pay'
 require 'spreedly/payment_methods/paypal'
 require 'spreedly/payment_methods/sprel'
 require 'spreedly/payment_methods/bank_account'
@@ -37,6 +39,7 @@ require 'spreedly/receiver'
 require 'spreedly/gateway_class'
 require 'spreedly/receiver_class'
 require 'spreedly/error'
+require 'spreedly/version'
 
 module Spreedly
 
