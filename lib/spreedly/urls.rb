@@ -121,5 +121,18 @@ module Spreedly
     def deliver_to_receiver_url(receiver_token)
       "#{base_url}/v1/receivers/#{receiver_token}/deliver.xml"
     end
+
+    def list_gateway_transactions_url(gateway_token, order = nil)
+      order_param = "?order=#{order}" if order
+      "#{base_url}/v1/gateways/#{gateway_token}/transactions.xml#{order_param}"
+    end
+
+    def create_merchant_profile_url
+      "#{base_url}/v1/merchant_profiles.xml"
+    end
+
+    def create_sca_provider_url
+      "#{base_url}/v1/sca/providers.xml"
+    end
   end
 end

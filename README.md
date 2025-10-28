@@ -208,6 +208,19 @@ env.purchase_on_gateway(gateway_token, payment_method_token, amount,
                        )
 ```
 
+For SCA (Strong Customer Authentication) requirements, you can also pass authentication parameters:
+
+``` ruby
+env.purchase_on_gateway(gateway_token, payment_method_token, amount,
+                        authentication_parameters: {
+                          cavv: "jJ81HADVRtXfCBATEp01CJUAAAA=",
+                          eci: "05",
+                          xid: "00000000000000000501"
+                        },
+                        sca_provider_key: "your_sca_provider_key"
+                       )
+```
+
 #### Complete a transaction (3DS 2)
 
 ```ruby

@@ -50,8 +50,13 @@ module Spreedly
       api_post(authorize_url(gateway_token), body)
     end
 
-    def complete_transaction(transaction_token)
-      api_post(complete_transaction_url(transaction_token), '')
+    def complete_transaction(transaction_token, context: nil)
+      body = if context
+        xml_for_hash({context: context})
+      else
+        ""
+      end
+      api_post(complete_transaction_url(transaction_token), body)
     end
 
     def verify_on_gateway(gateway_token, payment_method_token, options = {})
@@ -161,6 +166,63 @@ module Spreedly
     def deliver_to_receiver(receiver_token, payment_method_token, receiver_options)
       body = deliver_to_receiver_body(payment_method_token, receiver_options)
       api_post(deliver_to_receiver_url(receiver_token), body)
+    end
+
+    def list_gateway_transactions(gateway_token, order = :desc)
+      xml_doc = ssl_get(list_gateway_transactions_url(gateway_token, order), headers)
+      Transaction.new_list_from(xml_doc)
+    end
+
+    def create_merchant_profile(description:, acquirer_merchant_id:, merchant_name:, country_code:, mcc:, card_brands: %w[visa mastercard amex])
+      per_card_brand_data = {
+        acquirer_merchant_id: acquirer_merchant_id.to_s,
+        merchant_name: merchant_name.to_s,
+        country_code: country_code.to_s,
+        mcc: mcc.to_s
+      }
+
+      request_body_hash = {
+        merchant_profile: {
+          description: description
+        }
+      }
+      card_brands.each do |card_brand|
+        request_body_hash[:merchant_profile][card_brand] = per_card_brand_data
+      end
+      request_body = xml_for_hash(request_body_hash)
+
+      xml_doc = ssl_post(create_merchant_profile_url, request_body, headers)
+      Spreedly::Model.new(xml_doc)
+    end
+
+    def create_sca_provider(merchant_profile_key:, merchant_url:, sandbox: nil, visa_abin: nil, mastercard_abin: nil, amex_abin: nil)
+      request_body_hash = {
+        sca_provider: {
+          merchant_profile_key: merchant_profile_key
+        }
+      }
+
+      %w[visa mastercard amex].each do |card_brand|
+        abin = binding.local_variable_get("#{card_brand}_abin")
+        next unless abin
+        request_body_hash[:sca_provider][card_brand] = {
+          acquirer_bin: abin,
+          merchant_url: merchant_url.to_s
+        }
+      end
+
+      # Allow sandbox to be explicitly set, otherwise default to test/spreedly based on sandbox param
+      if sandbox.nil?
+        request_body_hash[:sca_provider].merge!(type: "spreedly", sandbox: false)
+      else
+        request_body_hash[:sca_provider].merge!(
+          sandbox ? {type: "test", sandbox: true} : {type: "spreedly", sandbox: false}
+        )
+      end
+
+      request_body = xml_for_hash(request_body_hash)
+      xml_doc = ssl_post(create_sca_provider_url, request_body, headers)
+      Spreedly::Model.new(xml_doc)
     end
 
     private
@@ -327,9 +389,11 @@ module Spreedly
       add_gateway_specific_fields(doc, options)
       add_shipping_address_override(doc, options)
       add_billing_address_override(doc, options)
+      add_authentication_parameters(doc, options)
       add_to_doc(doc, options, :order_id, :description, :ip, :email, :merchant_name_descriptor,
                                :merchant_location_descriptor, :redirect_url, :callback_url,
-                               :continue_caching, :attempt_3dsecure, :browser_info, :three_ds_version, :channel)
+                               :continue_caching, :attempt_3dsecure, :browser_info, :three_ds_version, :channel,
+                               :sca_provider_key)
     end
 
     def add_gateway_specific_fields(doc, options)
@@ -351,6 +415,27 @@ module Spreedly
       doc.send(:billing_address) do
         options[:billing_address].each do |k, v|
           doc.send(k, v)
+        end
+      end
+    end
+
+    def add_authentication_parameters(doc, options)
+      # Support both :authentication_parameters and :sca_authentication_parameters for backward compatibility
+      params = options[:authentication_parameters] || options[:sca_authentication_parameters]
+      return unless params.kind_of?(Hash)
+
+      # Use the appropriate XML tag based on which option was provided
+      tag_name = options[:sca_authentication_parameters] ? :sca_authentication_parameters : :authentication_parameters
+
+      if tag_name == :sca_authentication_parameters
+        # For sca_authentication_parameters, use xml_for_hash to maintain nested structure
+        doc << "<sca_authentication_parameters>#{xml_for_hash(params)}</sca_authentication_parameters>"
+      else
+        # For authentication_parameters, use the block syntax
+        doc.send(:authentication_parameters) do
+          params.each do |k, v|
+            doc.send(k, v)
+          end
         end
       end
     end

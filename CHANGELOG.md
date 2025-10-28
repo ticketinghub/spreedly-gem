@@ -6,7 +6,15 @@ All notable changes to this project will be documented in this file.
 ### Added
 - Support for optional `billing_address` parameter in purchase, authorize, capture, refund, verify, and void transactions
 - New `BillingAddress` class to handle billing address data from API responses
-- Documentation for using `billing_address` in README
+- Support for optional `authentication_parameters` and `sca_authentication_parameters` for SCA (Strong Customer Authentication) requirements
+- Support for `sca_provider_key` parameter in transactions
+- New `list_gateway_transactions` method to list transactions for a specific gateway
+- New `create_merchant_profile` method to create merchant profiles
+- New `create_sca_provider` method to create SCA providers
+- Documentation for using `billing_address` and `authentication_parameters` in README
+
+### Changed
+- `complete_transaction` now accepts optional `context:` parameter for 3DS 2.0 completion with context data
 
 ## [2.0.28] - 2023-08-23
 ### Changed
