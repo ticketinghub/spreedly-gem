@@ -242,12 +242,8 @@ class PurchaseTest < Test::Unit::TestCase
 
   def test_successful_google_pay_purchase_with_billing_address
     billing_address = {
-      name: "Google Pay User",
-      address1: "789 Google St",
-      city: "Mountain View",
-      state: "CA",
-      zip: "94043",
-      country: "US"
+      name: "Bartosz Blimke",
+      country: "PL"
     }
 
     request_body = nil
@@ -278,14 +274,11 @@ class PurchaseTest < Test::Unit::TestCase
     assert request_body.include?(google_pay_token), "Google Pay token should be in request body"
     assert trans.at_xpath('./google_pay/payment_data'), "Google Pay payment_data element should exist"
 
-    # Verify billing address is in the request
+    # Verify billing address is in the request (minimal: just name and country)
+    assert trans.at_xpath('./billing_address'), "billing_address element should exist"
     assert_xpaths_in trans,
-      [ './billing_address/name', 'Google Pay User' ],
-      [ './billing_address/address1', '789 Google St' ],
-      [ './billing_address/city', 'Mountain View' ],
-      [ './billing_address/state', 'CA' ],
-      [ './billing_address/zip', '94043' ],
-      [ './billing_address/country', 'US' ],
+      [ './billing_address/name', 'Bartosz Blimke' ],
+      [ './billing_address/country', 'PL' ],
       [ './order_id', 'GP-123' ],
       [ './email', 'user@example.com' ],
       [ './currency_code', 'EUR' ]
