@@ -240,6 +240,80 @@ class PurchaseTest < Test::Unit::TestCase
       [ './billing_address/phone_number', '555-123-4567' ]
   end
 
+  def test_request_body_params_for_google_pay_with_billing_address
+    billing_address = {
+      name: "Google Pay User",
+      address1: "789 Google St",
+      city: "Mountain View",
+      state: "CA",
+      zip: "94043",
+      country: "US"
+    }
+
+    body = get_request_body(successful_purchase_response) do
+      @environment.purchase_on_gateway("TheGatewayToken", google_pay_token, 2001,
+        payment_method: :google_pay,
+        billing_address: billing_address,
+        order_id: "GP-123",
+        email: "user@example.com"
+      )
+    end
+
+    transaction = body.xpath('./transaction')
+    
+    # Verify Google Pay data is present
+    assert body.to_s.include?(google_pay_token), "Google Pay token should be in request body"
+    assert transaction.at_xpath('./google_pay/payment_data'), "Google Pay payment_data element should exist"
+    
+    # Verify billing address is present
+    assert_xpaths_in transaction,
+      [ './billing_address/name', 'Google Pay User' ],
+      [ './billing_address/address1', '789 Google St' ],
+      [ './billing_address/city', 'Mountain View' ],
+      [ './billing_address/state', 'CA' ],
+      [ './billing_address/zip', '94043' ],
+      [ './billing_address/country', 'US' ],
+      [ './order_id', 'GP-123' ],
+      [ './email', 'user@example.com' ]
+  end
+
+  def test_request_body_params_for_apple_pay_with_billing_address
+    billing_address = {
+      name: "Apple Pay User",
+      address1: "1 Apple Park Way",
+      city: "Cupertino",
+      state: "CA",
+      zip: "95014",
+      country: "US"
+    }
+
+    body = get_request_body(successful_purchase_response) do
+      @environment.purchase_on_gateway("TheGatewayToken", apple_pay_token, 2001,
+        payment_method: :apple_pay,
+        billing_address: billing_address,
+        order_id: "AP-456",
+        email: "apple@example.com"
+      )
+    end
+
+    transaction = body.xpath('./transaction')
+    
+    # Verify Apple Pay data is present
+    assert body.to_s.include?(apple_pay_token), "Apple Pay token should be in request body"
+    assert transaction.at_xpath('./apple_pay/payment_data'), "Apple Pay payment_data element should exist"
+    
+    # Verify billing address is present
+    assert_xpaths_in transaction,
+      [ './billing_address/name', 'Apple Pay User' ],
+      [ './billing_address/address1', '1 Apple Park Way' ],
+      [ './billing_address/city', 'Cupertino' ],
+      [ './billing_address/state', 'CA' ],
+      [ './billing_address/zip', '95014' ],
+      [ './billing_address/country', 'US' ],
+      [ './order_id', 'AP-456' ],
+      [ './email', 'apple@example.com' ]
+  end
+
   private
   def purchase_using(response)
     @environment.stubs(:raw_ssl_request).returns(response)
