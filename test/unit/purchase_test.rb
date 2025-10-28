@@ -240,6 +240,55 @@ class PurchaseTest < Test::Unit::TestCase
       [ './billing_address/phone_number', '555-123-4567' ]
   end
 
+  def test_successful_google_pay_purchase_with_billing_address
+    billing_address = {
+      name: "Google Pay User",
+      address1: "789 Google St",
+      city: "Mountain View",
+      state: "CA",
+      zip: "94043",
+      country: "US"
+    }
+
+    request_body = nil
+    @environment.stubs(:raw_ssl_request).with do |method, endpoint, body, headers|
+      request_body = body
+      true
+    end.returns(successful_purchase_response)
+
+    transaction = @environment.purchase_on_gateway("TheGatewayToken", google_pay_token, 7551,
+      payment_method: :google_pay,
+      billing_address: billing_address,
+      order_id: "GP-123",
+      email: "user@example.com",
+      currency_code: "EUR"
+    )
+
+    # Verify the transaction succeeded
+    assert_kind_of(Spreedly::Purchase, transaction)
+    assert transaction.succeeded?
+
+    # Parse and verify the request body that was sent
+    body = Nokogiri::XML(request_body)
+    trans = body.xpath('./transaction')
+    
+    # Verify Google Pay data is in the request
+    assert request_body.include?(google_pay_token), "Google Pay token should be in request body"
+    assert trans.at_xpath('./google_pay/payment_data'), "Google Pay payment_data element should exist"
+    
+    # Verify billing address is in the request
+    assert_xpaths_in trans,
+      [ './billing_address/name', 'Google Pay User' ],
+      [ './billing_address/address1', '789 Google St' ],
+      [ './billing_address/city', 'Mountain View' ],
+      [ './billing_address/state', 'CA' ],
+      [ './billing_address/zip', '94043' ],
+      [ './billing_address/country', 'US' ],
+      [ './order_id', 'GP-123' ],
+      [ './email', 'user@example.com' ],
+      [ './currency_code', 'EUR' ]
+  end
+
   def test_request_body_params_for_google_pay_with_billing_address
     billing_address = {
       name: "Google Pay User",
@@ -297,11 +346,11 @@ class PurchaseTest < Test::Unit::TestCase
     end
 
     transaction = body.xpath('./transaction')
-    
+
     # Verify Apple Pay data is present
     assert body.to_s.include?(apple_pay_token), "Apple Pay token should be in request body"
     assert transaction.at_xpath('./apple_pay/payment_data'), "Apple Pay payment_data element should exist"
-    
+
     # Verify billing address is present
     assert_xpaths_in transaction,
       [ './billing_address/name', 'Apple Pay User' ],
