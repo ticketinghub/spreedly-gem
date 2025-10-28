@@ -256,13 +256,15 @@ class PurchaseTest < Test::Unit::TestCase
       true
     end.returns(successful_purchase_response)
 
-    transaction = @environment.purchase_on_gateway("TheGatewayToken", google_pay_token, 7551,
+    options = {
       payment_method: :google_pay,
       billing_address: billing_address,
       order_id: "GP-123",
       email: "user@example.com",
       currency_code: "EUR"
-    )
+    }
+
+    transaction = @environment.purchase_on_gateway("TheGatewayToken", google_pay_token, 7551, options)
 
     # Verify the transaction succeeded
     assert_kind_of(Spreedly::Purchase, transaction)
@@ -271,11 +273,11 @@ class PurchaseTest < Test::Unit::TestCase
     # Parse and verify the request body that was sent
     body = Nokogiri::XML(request_body)
     trans = body.xpath('./transaction')
-    
+
     # Verify Google Pay data is in the request
     assert request_body.include?(google_pay_token), "Google Pay token should be in request body"
     assert trans.at_xpath('./google_pay/payment_data'), "Google Pay payment_data element should exist"
-    
+
     # Verify billing address is in the request
     assert_xpaths_in trans,
       [ './billing_address/name', 'Google Pay User' ],
@@ -309,11 +311,11 @@ class PurchaseTest < Test::Unit::TestCase
     end
 
     transaction = body.xpath('./transaction')
-    
+
     # Verify Google Pay data is present
     assert body.to_s.include?(google_pay_token), "Google Pay token should be in request body"
     assert transaction.at_xpath('./google_pay/payment_data'), "Google Pay payment_data element should exist"
-    
+
     # Verify billing address is present
     assert_xpaths_in transaction,
       [ './billing_address/name', 'Google Pay User' ],
