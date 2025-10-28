@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [Unreleased]
+### Added
+- Support for optional `billing_address` parameter in purchase, authorize, capture, refund, verify, and void transactions
+- New `BillingAddress` class to handle billing address data from API responses
+- Documentation for using `billing_address` in README
+
 ## [2.0.28] - 2023-08-23
 ### Changed
 - @jknipp - Merge fix for Spreedly version error in User-Agent header reference from @mrudult
@@ -188,4 +194,3 @@ All notable changes to this project will be documented in this file.
 
 ## 1.0.0 / 2009-03-17
 - Initial release.
-

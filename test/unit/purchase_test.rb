@@ -138,6 +138,19 @@ class PurchaseTest < Test::Unit::TestCase
     assert_equal '123-456-7890', t.shipping_address.phone_number
   end
 
+  def test_successful_purchase_with_billing_address_override
+    t = purchase_using(successful_purchase_with_billing_address_override_response)
+
+    assert_equal 'Jane Smith', t.billing_address.name
+    assert_equal '456 Elm St.', t.billing_address.address1
+    assert_equal 'Apt 2B', t.billing_address.address2
+    assert_equal 'Springfield', t.billing_address.city
+    assert_equal 'IL', t.billing_address.state
+    assert_equal '62701', t.billing_address.zip
+    assert_equal 'USA', t.billing_address.country
+    assert_equal '555-123-4567', t.billing_address.phone_number
+  end
+
   def test_request_body_params
     body = get_request_body(successful_purchase_response) do
       @environment.purchase_on_gateway("TheGatewayToken", "TheCardToken", 2001, all_possible_options)
@@ -197,6 +210,34 @@ class PurchaseTest < Test::Unit::TestCase
       [ './continue_caching', 'true']
 
     assert body.to_s.include?(apple_pay_token)
+  end
+
+  def test_request_body_params_with_billing_address
+    billing_address = {
+      name: "Jane Smith",
+      address1: "456 Elm St.",
+      address2: "Apt 2B",
+      city: "Springfield",
+      state: "IL",
+      zip: "62701",
+      country: "USA",
+      phone_number: "555-123-4567"
+    }
+
+    body = get_request_body(successful_purchase_response) do
+      @environment.purchase_on_gateway("TheGatewayToken", "TheCardToken", 2001, {billing_address: billing_address})
+    end
+
+    transaction = body.xpath('./transaction')
+    assert_xpaths_in transaction,
+      [ './billing_address/name', 'Jane Smith' ],
+      [ './billing_address/address1', '456 Elm St.' ],
+      [ './billing_address/address2', 'Apt 2B' ],
+      [ './billing_address/city', 'Springfield' ],
+      [ './billing_address/state', 'IL' ],
+      [ './billing_address/zip', '62701' ],
+      [ './billing_address/country', 'USA' ],
+      [ './billing_address/phone_number', '555-123-4567' ]
   end
 
   private

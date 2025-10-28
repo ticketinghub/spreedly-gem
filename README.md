@@ -183,6 +183,31 @@ env.purchase_on_gateway(gateway_token, payment_method_token, amount,
                        )
 ```
 
+You can also include billing and shipping address information:
+
+``` ruby
+env.purchase_on_gateway(gateway_token, payment_method_token, amount,
+                        billing_address: {
+                          name: "John Doe",
+                          address1: "123 Main St",
+                          address2: "Apt 4B",
+                          city: "New York",
+                          state: "NY",
+                          zip: "10001",
+                          country: "US",
+                          phone_number: "555-123-4567"
+                        },
+                        shipping_address: {
+                          name: "Jane Smith",
+                          address1: "456 Elm St",
+                          city: "Boston",
+                          state: "MA",
+                          zip: "02101",
+                          country: "US"
+                        }
+                       )
+```
+
 #### Complete a transaction (3DS 2)
 
 ```ruby

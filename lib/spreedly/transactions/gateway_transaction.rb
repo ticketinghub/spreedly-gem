@@ -4,14 +4,16 @@ module Spreedly
     field :merchant_name_descriptor, :merchant_location_descriptor
     field :on_test_gateway, type: :boolean
 
-    attr_reader :response, :gateway_specific_fields, :gateway_specific_response_fields, :shipping_address
+    attr_reader :response, :gateway_specific_fields, :gateway_specific_response_fields, :shipping_address, :billing_address
 
     def initialize(xml_doc)
       super
       response_xml_doc = xml_doc.at_xpath('.//response')
       shipping_address_xml_doc = xml_doc.at_xpath('.//shipping_address')
+      billing_address_xml_doc = xml_doc.at_xpath('.//billing_address')
       @response = response_xml_doc ? Response.new(response_xml_doc) : nil
       @shipping_address = shipping_address_xml_doc ? ShippingAddress.new(shipping_address_xml_doc) : nil
+      @billing_address = billing_address_xml_doc ? BillingAddress.new(billing_address_xml_doc) : nil
       @gateway_specific_fields = parse_gateway_fields(xml_doc, './/gateway_specific_fields')
       @gateway_specific_response_fields = parse_gateway_fields(xml_doc, './/gateway_specific_response_fields')
     end
